@@ -100,9 +100,9 @@ confirm "Start setup based on checked out dotfiles" \
     && "$DOTFILES_DIR/bin/init.sh"
 echo
 
-if [ -f "$TMP_DIR" ]; then
-    echo "Remove scripts from local download directory under '$TMP_DIR'?
-    If kept, new SSH keys can be easily generated with the 'setup_new_ssh_key.sh' script."
+if [[ -d "$TMP_DIR" ]]; then
+    echo "Remove scripts from local download directory under '$TMP_DIR'?"
+    echo "If no, download 'setup_new_ssh_key.sh' script for further easy SSH keys setup."
     confirm "Remove downloaded bootstrap scripts?" \
         && rm -rf "$TMP_DIR"
 
