@@ -118,7 +118,7 @@ function setup_new_ssh_key {
         generate_new_ssh_keypair "$ALGORITHM" "$KEY_FILE" "$KEY_COMMENT"
     else
         echo
-        confirm "Continue setup with existing key" || exit;
+        confirm "Continue SSH setup with existing key" || exit 1;
     fi
 
     # generate_new_ssh_keypair "$ALGORITHM" "$KEY_FILE" "$KEY_COMMENT"

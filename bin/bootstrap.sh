@@ -2,26 +2,47 @@
 
 # bootstrap.sh - bootstrap GIT and DEVELOP setup for a new machine
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DOTFILES_DIR="$HOME/Developer/dotfiles"
+TMP_DIR="$HOME/.my_bootstrap_scripts"
+REMOTE_BASEURL="https://github.com/gtmn/dotfiles/raw/2022-update/bin"
+FILE_LIST=('ask.sh' 'confirm.sh' 'functions.sh' 'ssh_key_helper.sh')
+
+# ==================================================
+
 # Function to download files from a remote location and source them
-function source_remote_file {
+function download_file {
     _REMOTE_FILE=$1
     _LOCAL_FILE=$2
 
+    echo "Download remote file: $_REMOTE_FILE"
+
     curl --insecure -Ls "$_REMOTE_FILE" -o "$_LOCAL_FILE" --create-dirs
+}
+
+function async_source_file {
+    _LOCAL_FILE=$1
+
+    echo "Source local file: $_LOCAL_FILE"
+
     while [ ! -f "$_LOCAL_FILE" ]; do sleep 1; done
+
     # shellcheck source=/dev/null
     source "$_LOCAL_FILE"
 }
 
-# Source file from remote location
-TMP_DIR="$HOME/.tmp_bootstrap"
-REMOTE_BASEURL="https://github.com/gtmn/dotfiles/raw/2022-update/bin"
-FILE_LIST=('ask.sh' 'confirm.sh' 'functions.sh' 'ssh_key_helper.sh')
-
+# Source files from location
 # shellcheck disable=SC2048
 for item in ${FILE_LIST[*]}
 do
-    source_remote_file "$REMOTE_BASEURL/$item" "$TMP_DIR/$item"
+    if [[ "$(realpath "$SCRIPT_DIR")" != "$(realpath "$DOTFILES_DIR/bin")" ]]; then
+        download_file "$REMOTE_BASEURL/$item" "$TMP_DIR/$item"
+        async_source_file "$TMP_DIR/$item"
+
+    else
+        async_source_file "$item"
+    fi
+
 done
 
 # ==================================================
@@ -46,6 +67,7 @@ done
 #         https://api.github.com/user/keys
 # }
 
+# ==================================================
 
 function clone_dotfiles_repo {
     mkdir -p ~/Developer
@@ -55,20 +77,39 @@ function clone_dotfiles_repo {
 
 # ==================================================
 
-clear
+# clear
 
-echo "--------------------------------------------------
-BOOTSTRAPING ...
---------------------------------------------------"
+echo
+echo "BOOTSTRAPING ...
+=================================================="
+echo
 
+# Attention, if SSH setup is aborted whole bootstraping process is aborted
 confirm_yes "Start SSH setup:" \
-    && echo; setup_new_ssh_key
+    && setup_new_ssh_key
+echo
 
 # confirm "Upload ssh key ($PUB_KEY_FILE) to github.com [y/N]:" \
 #    && upload_ssh_key_github && ssh -T git@github.com
 
 confirm "Clone dotfiles directory to ~/Developer/dotfiles directory " \
-    && echo; clone_dotfiles_repo
+    && clone_dotfiles_repo
+echo
 
 confirm "Start setup based on checked out dotfiles" \
-    && echo; ~/Developer/dotfiles/bin/init.sh
+    && "$DOTFILES_DIR/bin/init.sh"
+echo
+
+if [ -f "$TMP_DIR" ]; then
+    echo "Remove scripts from local download directory under '$TMP_DIR'?
+    If kept, new SSH keys can be easily generated with the 'setup_new_ssh_key.sh' script."
+    confirm "Remove downloaded bootstrap scripts?" \
+        && rm -rf "$TMP_DIR"
+
+    if [[ $? -eq 0 ]]; then
+        echo "Cleaning up ..."
+        rm -rf "$TMP_DIR"
+    else
+        download_file "$REMOTE_BASEURL/setup_new_ssh_key.sh" "$TMP_DIR/setup_new_ssh_key.sh"
+    fi
+fi
