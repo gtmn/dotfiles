@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# ssh_key_helperhelper
+# ssh_key_helper
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # shellcheck source=/dev/null
-source ./functions.sh
+source "$SCRIPT_DIR/functions.sh"
 
 # shellcheck disable=SC2088
 SSH_BASE_DIR="$HOME/.ssh"
