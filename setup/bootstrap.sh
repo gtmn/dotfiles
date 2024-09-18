@@ -34,7 +34,7 @@ function download_file {
     local _REMOTE_FILE=$1
     local _LOCAL_FILE=$2
 
-    echo "Download remote file: $_REMOTE_FILE"
+    echo "Downloading remote file: $_REMOTE_FILE"
 
     curl --insecure -Ls "$_REMOTE_FILE" -o "$_LOCAL_FILE" --create-dirs
 }
@@ -43,7 +43,7 @@ function download_file {
 function async_source_file {
     local _LOCAL_FILE=$1
 
-    echo "Source local file: $_LOCAL_FILE"
+    echo "Sourcing local file: $_LOCAL_FILE"
 
     while [ ! -f "$_LOCAL_FILE" ]; do sleep 1; done
 
@@ -54,12 +54,12 @@ function async_source_file {
 # Download and source multiple files from a remote location
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
+echo "Start downloading bootstraping files..."
+
 # shellcheck disable=SC2048
 for item in ${BOOTSTRAP_SCRIPT_FILES[*]}; do
-    echo "Start downloading bootstraping files..."
-
     # TODO: What did I do here?
-    if [[ "$(realpath "$SCRIPT_DIR")" != "$(realpath "$DOTFILES_DIR/scripts")" ]]; then
+    if [[ "$(realpath "$SCRIPT_DIR")" != "$(realpath "$TMP_DIR/scripts")" ]]; then
         download_file "$REMOTE_BASE_URL/$item" "$TMP_DIR/$item"
         async_source_file "$TMP_DIR/$item"
     else
@@ -71,8 +71,10 @@ done
 # Create new SSH key & copy to clipboard
 # ====================================================================================================
 
-echo "Creating new SSH key..."
+echo
+echo "Start cration of new SSH key..."
 setup_new_ssh_key
+echo
 echo "Before cloning the remaining dotfiles from Git make sure SSH key has been added"
 confirm "Added SSH key to your account?"
 
