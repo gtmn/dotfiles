@@ -1,27 +1,47 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# bootstrap.sh - bootstrap GIT and DEVELOP setup for a new machine
+# ====================================================================================================
+# bootstrap.sh - Bootstrap a new machine
+# ====================================================================================================
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DOTFILES_DIR="$HOME/Developer/dotfiles"
-TMP_DIR="$HOME/.my_bootstrap_scripts"
-REMOTE_BASEURL="https://github.com/gtmn/dotfiles/raw/2022-update/bin"
-FILE_LIST=('ask.sh' 'confirm.sh' 'functions.sh' 'ssh_key_helper.sh')
+REMOTE_BASE_URL="https://github.com/gtmn/dotfiles/raw/2022-update/scripts"
+DOTFILES_REMOTE_REPO_URL="git@github.com:gtmn/dotfiles"
+DOTFILES_DIR="$HOME/.dotfiles"
+TMP_DIR="$HOME/.tmp_dotfiles"
+BOOTSTRAP_SCRIPT_FILES=('ask.sh' 'confirm.sh' 'ssh_key_helper.sh')
 
-# ==================================================
+# ====================================================================================================
+# Check for minimum requirements
+# ====================================================================================================
+# shellcheck disable=SC2292
+if [ -z "${BASH_VERSION:-}" ]; then
+    printf "Bash is required to interpret this script.\n" >&2
+    exit 1
+fi
 
-# Function to download files from a remote location and source them
+# ====================================================================================================
+# Download & source initial files to enable Git connection
+# ====================================================================================================
+
+# Print message and abort
+function abort {
+    printf "%s\n" "$@" >&2
+    exit 1
+}
+
+# Download a file from a remote location
 function download_file {
-    _REMOTE_FILE=$1
-    _LOCAL_FILE=$2
+    local _REMOTE_FILE=$1
+    local _LOCAL_FILE=$2
 
     echo "Download remote file: $_REMOTE_FILE"
 
     curl --insecure -Ls "$_REMOTE_FILE" -o "$_LOCAL_FILE" --create-dirs
 }
 
+# Source a file
 function async_source_file {
-    _LOCAL_FILE=$1
+    local _LOCAL_FILE=$1
 
     echo "Source local file: $_LOCAL_FILE"
 
@@ -31,85 +51,60 @@ function async_source_file {
     source "$_LOCAL_FILE"
 }
 
-# Source files from location
-# shellcheck disable=SC2048
-for item in ${FILE_LIST[*]}
-do
-    if [[ "$(realpath "$SCRIPT_DIR")" != "$(realpath "$DOTFILES_DIR/bin")" ]]; then
-        download_file "$REMOTE_BASEURL/$item" "$TMP_DIR/$item"
-        async_source_file "$TMP_DIR/$item"
+# Download and source multiple files from a remote location
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
+# shellcheck disable=SC2048
+for item in ${BOOTSTRAP_SCRIPT_FILES[*]}; do
+    echo "Start downloading bootstraping files..."
+
+    # TODO: What did I do here?
+    if [[ "$(realpath "$SCRIPT_DIR")" != "$(realpath "$DOTFILES_DIR/bin")" ]]; then
+        download_file "$REMOTE_BASE_URL/$item" "$TMP_DIR/$item"
+        async_source_file "$TMP_DIR/$item"
     else
         async_source_file "$item"
     fi
-
 done
 
-# ==================================================
+# ====================================================================================================
+# Create new SSH key & copy to clipboard
+# ====================================================================================================
 
-# function upload_ssh_key_github {
-#     # https://gist.github.com/juanique/4092969?permalink_comment_id=3078760#gistcomment-3078760
-#     if [ -n $comment ]; then
-#         read -p "Enter ssh key title: " comment
-#     else
-#         echo "Using ssh key title: $comment"
-#     fi
+echo "Creating new SSH key..."
+setup_new_ssh_key
+echo "Before cloning the remaining dotfiles from Git make sure SSH key has been added"
+confirm "Added SSH key to your account?"
 
-#     read -p "Enter github username: " githubuser
-#     read -s -p "Enter github password for user $githubuser: " githubpass
-#     echo
-#     read -p "Enter github access token: " access_token
-#     echo
-#     curl -u "$githubuser:$githubpass" \
-#         -X POST \
-#         -H "Authorization: token $access_token" \
-#         -d '{"title":"'$comment'", "key":"'$(cat $PUB_KEY_FILE)'"}' \
-#         https://api.github.com/user/keys
-# }
+# ====================================================================================================
+# Clone dotfiles dir & init from dotfiles file
+# ====================================================================================================
 
-# ==================================================
+if [[ ! -f $DOTFILES_DIR ]]; then
+    echo "Did not find dotfiles directory"
 
-function clone_dotfiles_repo {
-    mkdir -p ~/Developer
-    cd ~/Developer || return
-    git clone git@github.com:gtmn/dotfiles
-}
+    confirm "Clone dotfiles directory to $DOTFILES_DIR directory?" &&
+        mkdir -p "$DOTFILES_DIR" &&
+        git -C "$DOTFILES_DIR" clone "$DOTFILES_REMOTE_REPO_URL" .
+else
+    echo "Did find the dotfiles development dir."
+    confirm "Pull latest from Git repo?" &&
+        git -C "$DOTFILES_DIR" pull
+fi
 
-# ==================================================
+INIT_SCRIPT_FILE="$DOTFILES_DIR/setup/init.sh"
+if [[ -f $INIT_SCRIPT_FILE ]]; then
+    confirm "Start setup based on checked out dotfiles" &&
+        bash "$INIT_SCRIPT_FILE"
+else
+    echo "WARN Could not find init script, skipping initialization"
+fi
 
-# clear
-
-echo
-echo "BOOTSTRAPING ...
-=================================================="
-echo
-
-# Attention, if SSH setup is aborted whole bootstraping process is aborted
-confirm_yes "Start SSH setup:" \
-    && setup_new_ssh_key
-echo
-
-# confirm "Upload ssh key ($PUB_KEY_FILE) to github.com [y/N]:" \
-#    && upload_ssh_key_github && ssh -T git@github.com
-
-confirm "Clone dotfiles directory to ~/Developer/dotfiles directory " \
-    && clone_dotfiles_repo
-echo
-
-confirm "Start setup based on checked out dotfiles" \
-    && "$DOTFILES_DIR/bin/init.sh"
-echo
+# ====================================================================================================
+# Cleanup
+# ====================================================================================================
 
 if [[ -d "$TMP_DIR" ]]; then
-    echo "Remove scripts from local download directory under '$TMP_DIR'?"
-    echo "If no, download 'setup_new_ssh_key.sh' script for further easy SSH keys setup."
-    confirm "Remove downloaded bootstrap scripts?" \
-        && rm -rf "$TMP_DIR"
-
-    if [[ $? -eq 0 ]]; then
-        echo "Cleaning up ..."
+    confirm "Remove temporary script files downloaded for bootstrapping?" &&
         rm -rf "$TMP_DIR"
-    else
-        download_file "$REMOTE_BASEURL/setup_new_ssh_key.sh" "$TMP_DIR/setup_new_ssh_key.sh"
-    fi
 fi
