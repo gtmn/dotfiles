@@ -59,7 +59,7 @@ for item in ${BOOTSTRAP_SCRIPT_FILES[*]}; do
     echo "Start downloading bootstraping files..."
 
     # TODO: What did I do here?
-    if [[ "$(realpath "$SCRIPT_DIR")" != "$(realpath "$DOTFILES_DIR/bin")" ]]; then
+    if [[ "$(realpath "$SCRIPT_DIR")" != "$(realpath "$DOTFILES_DIR/scripts")" ]]; then
         download_file "$REMOTE_BASE_URL/$item" "$TMP_DIR/$item"
         async_source_file "$TMP_DIR/$item"
     else
