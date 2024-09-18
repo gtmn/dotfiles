@@ -5,6 +5,8 @@
 # Reusable confirmation prompts
 # Extended from: https://stackoverflow.com/a/51076022
 
+# ==================================================
+
 # Read a single char from /dev/tty, prompting with "$*"
 # Note: pressing enter will return a null string. Perhaps a version terminated with X and then remove it in caller?
 # See https://unix.stackexchange.com/a/367880/143394 for dealing with multi-byte, etc.
@@ -52,5 +54,5 @@ function confirm_no {
 # Prompt to confirm, defaulting to YES on <enter>
 function confirm_yes {
   local prompt="${*:-Are you sure} [Y/n]? "
-  get_yes_keypress "$prompt" 0
+  get_yes_keypress "$prompt" 0https://stackoverflow.com/beta/discussions
 }

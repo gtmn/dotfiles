@@ -2,6 +2,8 @@
 
 # ask.sh - Ask for a value and offer optionally a default value
 
+# ==================================================
+
 function ask_for_value {
     local _QUESTION=$1
     local _DEFAULT_VALUE=$2
