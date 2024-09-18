@@ -4,7 +4,7 @@
 # bootstrap.sh - Bootstrap a new machine
 # ====================================================================================================
 
-REMOTE_BASE_URL="https://github.com/gtmn/dotfiles/raw/2022-update/scripts"
+REMOTE_BASE_URL="${1:-https://github.com/gtmn/dotfiles/raw/main/scripts}"
 DOTFILES_REMOTE_REPO_URL="git@github.com:gtmn/dotfiles"
 DOTFILES_DIR="$HOME/.dotfiles"
 TMP_DIR="$HOME/.tmp_dotfiles"
@@ -88,6 +88,7 @@ if [[ ! -f $DOTFILES_DIR ]]; then
         git -C "$DOTFILES_DIR" clone "$DOTFILES_REMOTE_REPO_URL" .
 else
     echo "Did find the dotfiles development dir."
+
     confirm "Pull latest from Git repo?" &&
         git -C "$DOTFILES_DIR" pull
 fi
