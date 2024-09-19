@@ -1,10 +1,10 @@
-# nope
-node_modules
-.tmp
-
 # Folder view configuration files
 .DS_Store
 Desktop.ini
+
+# Temporary files
+*~
+.tmp
 
 # Thumbnail cache files
 ._*
@@ -16,3 +16,6 @@ Thumbs.db
 
 # Compiled Python files
 *.pyc
+
+# dependency caches
+node_modules

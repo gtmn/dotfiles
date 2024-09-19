@@ -1,0 +1,126 @@
+# Yabai documentation:
+#  - https://github.com/koekeishiya/yabai/blob/master/doc/yabai.asciidoc
+
+# Unload the macOS WindowManager process
+launchctl unload -F /System/Library/LaunchAgents/com.apple.WindowManager.plist > /dev/null 2>&1 &
+
+# Load scripting additions (SIP must be partially disabled)
+# sudo must be configured so that it will be able to run without password:
+# https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)#configure-scripting-addition
+sudo yabai --load-sa
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+
+# window settings
+yabai -m config window_border               off
+yabai -m config window_shadow               off
+yabai -m config active_window_opacity       1.0
+yabai -m config normal_window_opacity       0.8
+yabai -m config window_opacity              on
+yabai -m config split_ratio                 0.50
+yabai -m config split_type                  auto
+yabai -m config auto_balance                off
+yabai -m config window_animation_duration   0.0
+yabai -m config window_opacity_duration     0.0
+yabai -m config window_placement            second_child # New window spawns to the right if vertical split, or bottom if horizontal split
+yabai -m config layout                      bsp # default layout (can be bsp, stack or float)
+yabai -m config window_origin_display       cursor # specify which display a window should become managed at upon creation
+
+# window border
+yabai -m config window_border               on
+yabai -m config window_border_blur          off
+yabai -m config window_border_hidpi         on
+yabai -m config window_border_width         3
+yabai -m config window_border_radius        12
+yabai -m config insert_feedback_color       0xffd75f5f
+yabai -m config active_window_border_color  0xff00ff00
+yabai -m config normal_window_border_color  0x55555555
+
+# space settings
+yabai -m config window_gap      4
+yabai -m config top_padding     2
+yabai -m config bottom_padding  2
+yabai -m config left_padding    2
+yabai -m config right_padding   2
+
+# mouse settings
+yabai -m config mouse_modifier          fn      # modifier for clicking and dragging with mouse
+yabai -m config mouse_action1           resize    # set modifier + left-click drag to move window
+yabai -m config mouse_action2           move  # set modifier + right-click drag to resize window
+yabai -m config mouse_drop_action       swap    # when window is dropped in center of another window, swap them (on edges it will split)
+yabai -m config mouse_follows_focus     off     # center mouse on window with focus
+yabai -m config focus_follows_mouse     off
+
+# Disable yabai for the following applications
+# grid reference: <rows>:<cols>:<start-x>:<start-y>:<width>:<height>
+yabai -m rule --add app="^(Calculator|Dictionary|App Store|Home|Photo Booth)$" manage=off
+# yabai -m rule --add app="^(Activity Monitor|System Settings)$" manage=off grid=6:3:1:1:1:4
+ciyabai -m rule --add app="^System (Preferences|Settings)$" label="System (Preferences|Settings)" title=".*" manage=off grid=6:3:1:1:1:4
+yabai -m rule --add app="^Software Update$" manage=off
+yabai -m rule --add app="^Bartender" manage=off
+# yabai -m rule --add app="^Citrix Workspace$" manage=off grid=8:8:2:2:4:4
+yabai -m rule --add app="^Citrix Viewer$" manage=off grid=8:8:2:2:4:4
+yabai -m rule --add app="^Karabiner-Elements$" manage=off grid=12:12:3:2:6:8
+
+# Disable yabai for the general application sub-windows
+yabai -m rule --add title='Preferences$' manage=off
+yabai -m rule --add title='(!Karabiner-)Settings$' manage=off
+
+# Disable yabai for the following application sub-windows
+# yabai -m rule --add label="Disable for sub-windows" app=".*" title="(About This Mac|Finder Settings|Copy|Connect|Move|Info|Pref|General)" manage=off
+yabai -m rule --add label="About This Mac" app="System Information" title="About This Mac" manage=off
+yabai -m rule --add app="Finder" label="Finder" title="(Finder Settings|Copy|Connect|Move|Info|Pref|Archive Utility)" manage=off
+yabai -m rule --add app="Safari" label="Safari" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Search|Security|Privacy|Advanced)$" manage=off
+yabai -m rule --add app="Proxyman" label="Proxyman" title="^(General|Appearance|Privacy|Tools|GitHub|Platform|Advanced)$" manage=off
+yabai -m rule --add app="^Citrix (Viewer|Workspace)$" title="^(General|Accounts|File Access|Devices|Mic & Webcam|Keyboard|Security & Privacy|Advanced)$" manage=off
+yabai -m rule --add app="^Arc$" title="^([A-Za-z\h]{4,}|Max)$" manage=off
+yabai -m rule --add app="^Bartender$" manage=off
+
+# show digital colour meter topmost and on all spaces (SIP must be partially disabled)
+yabai -m rule --add app="^Digital Colou?r Meter$" sticky=on
+
+
+
+# space labels
+# yabai -m space 1 --label code
+# yabai -m space 2 --label messaging
+# yabai -m space 3 --label web
+# yabai -m space 4 --label notes
+
+# window rules
+# yabai -m rule --add app="^Mail$" space=mail
+# yabai -m rule --add app="^Safari$" space=web
+# yabai -m rule --add app="^Notes$" space=notes
+# yabai -m rule --add app="^ida64$" space=re
+# yabai -m rule --add app="^Transmission$" space=media
+# yabai -m rule --add app="^Spotify$" space=media
+# yabai -m rule --add app="^Discord$" space=social grid=1:1:0:0:1:1 manage=off
+# yabai -m rule --add app="^Steam$" space=games manage=off
+# yabai -m rule --add app="^(Calculator|System Preferences|Archive Utility)$" manage=off
+# yabai -m rule --add app="^mpv$" manage=off border=off sticky=on layer=above opacity=1.0 grid=8:8:6:0:2:2
+
+# signals
+# yabai -m signal --add event=window_destroyed active=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse &> /dev/null || yabai -m window --focus \$(yabai -m query --windows --space | jq .[0].id) &> /dev/null"
+# yabai -m signal --add event=window_minimized active=yes action="if \$(yabai -m query --windows --window \$YABAI_WINDOW_ID | jq -r '.\"is-floating\"'); then yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse &> /dev/null || yabai -m window --focus \$(yabai -m query --windows --space | jq .[0].id) &> /dev/null; fi"
+
+# specific space settings
+# yabai -m config --space mail  layout stack
+# yabai -m config --space games layout float
+
+
+
+echo "yabai configuration loaded..."
+
+
+
+
+# signals
+# padding_refresh_command="p=\$((\$(yabai -m query --windows --space | jq 'length') == 1 ? 0 : 10)) && \
+#     yabai -m config --space mouse top_padding \$p && \
+#     yabai -m config --space mouse bottom_padding \$p && \
+#     yabai -m config --space mouse left_padding \$p && \
+#     yabai -m config --space mouse right_padding \$p"
+
+# yabai -m signal --add event=window_created action="$padding_refresh_command"
+# yabai -m signal --add event=window_destroyed action="$padding_refresh_command"
+# yabai -m signal --add event=application_launched action="$padding_refresh_command"
+# yabai -m signal --add event=application_terminated action="$padding_refresh_command"

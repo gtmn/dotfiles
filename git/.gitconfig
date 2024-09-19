@@ -1,0 +1,45 @@
+[core]
+    editor = code --wait
+[commit]
+	template = ~/.stCommitMsg
+[push]
+    autoSetupRemote = true
+[diff]
+    tool = vscode
+[difftool "vscode"]
+    cmd = code --wait --diff $LOCAL $REMOTE
+[difftool "sourcetree"]
+    cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+    path =
+[merge]
+    tool = vscode
+[mergetool "vscode"]
+    cmd = code --wait $MERGED
+[mergetool "sourcetree"]
+    cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+    trustExitCode = true
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
+[color]
+    ui = true
+[alias]
+    lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
+    lga = !"git lg --all"
+    lgl = log --graph --abbrev-commit --decorate --stat --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(green)%aD%C(reset) - %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)%n'
+    lgla = !"git lgl --all"
+    hardreset = !"git add . && git reset --hard"
+    # switchupstream = "!f() { \
+    #     current_remote=\"$(git rev-parse --abbrev-ref HEAD@{upstream} | cut -d'/' -f1)\"; \
+    #         if [ \"$current_remote\" == \"g\" ]; then \
+    #             echo \"Please pass a valid argument [gh/gl]
+    #         if [ \"$current_remote\" == \"gl\" ]; then \
+    #             git branch --set-upstream-to=gh/$(git symbolic-ref --short HEAD); \
+    #             echo \"Upstream reference switched to github.com\"; \
+    #         else if \
+    #             git branch --set-upstream-to=remote1/$(git symbolic-ref --short HEAD); \
+    #             echo \"Upstream reference switched to devcloud.ubs.net\"; \
+    #         fi \
+    #     }; f"

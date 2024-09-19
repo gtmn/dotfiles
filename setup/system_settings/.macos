@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ~/.osx
 # Matthias's slight fork of https://github.com/paulirish/dotfiles/blob/master/.osx | https://mths.be/osx
@@ -21,7 +21,7 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 ###############################################################################
 
 # Enable dark mode
-defaults write NSGlobalDomain AppleInterfaceStyle Dark
+# defaults write NSGlobalDomain AppleInterfaceStyle Dark
 
 # Set computer name (as done via System Preferences → Sharing)
 #sudo scutil --set ComputerName "0x6D746873"

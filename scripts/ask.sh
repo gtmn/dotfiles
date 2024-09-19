@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ask.sh - Ask for a value and offer optionally a default value
 

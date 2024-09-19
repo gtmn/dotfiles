@@ -1,13 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ssh_key_helper
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # ==================================================
 
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR/functions.sh"
-
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # shellcheck disable=SC2088
 SSH_BASE_DIR="$HOME/.ssh"
@@ -22,7 +22,7 @@ function ask_filename {
     HOST=$(ask_for_value "Enter comment for which HOST this new key is used for" "$DEFAULT_HOST")
     CLIENT=$(ask_for_value "Enter comment for which CLIENT this new key is used for" "$DEFAULT_CLIENT")
     USER=$(ask_for_value "Enter comment for which USER this new key is used for" "$DEFAULT_USER")
-    KEY_COMMENT=$(echo "${HOST}-${CLIENT}-${USER}" | sed "s/[.]/_/g")
+    KEY_COMMENT=$(echo "${HOST}-${CLIENT}-${USER}" | sed "s/[.]//g")
     KEY_NAME=$(echo "id_${ALGORITHM}-${KEY_COMMENT}" | sed "s/\n/-/g")
     KEY_FILE=$(ask_for_value "Enter file to save the key" "$SSH_BASE_DIR/${KEY_NAME}")
 
@@ -39,7 +39,7 @@ function confirm_overwrite {
         echo
 
         # Ensure overwrite is confirmed a second time
-        if confirm "DANGEROUS! Overwrite existing key"; then
+        if confirm ">>> DANGEROUS! Overwrite existing key"; then
             confirm "Are you really sure"
 
             return $?
@@ -66,7 +66,6 @@ function generate_new_ssh_keypair {
 
     # Add to agent and save password to keychain
     ssh-add --apple-use-keychain "$_KEY_FILE"
-    echo
 
     # Add to local ssh agent
     eval "$(ssh-agent -s)"
@@ -85,8 +84,8 @@ function add_to_ssh_config {
 
     # new ssh config for HOST (replace $HOME with ~ for cross-device/user usage)
     local _SSH_HOST_CONFIG="HOST $_SSH_HOST
-    HOSTName $_SSH_HOST
-    USER $_SSH_USER
+    HostName $_SSH_HOST
+    User $_SSH_USER
     AddKeysToAgent yes
     UseKeychain yes
     IdentityFile ${KEY_FILE/#$HOME/~}
@@ -110,35 +109,25 @@ function add_to_ssh_config {
 function setup_new_ssh_key {
     echo "Basic SSH Setup Helper"
     echo "========================="
-    echo
 
     # Determine file name
     ask_filename
-    echo
 
-    #Generate
+    # Generate
     if confirm_overwrite "$KEY_FILE" -eq 0; then
-        echo
         generate_new_ssh_keypair "$ALGORITHM" "$KEY_FILE" "$KEY_COMMENT"
     else
-        echo
         confirm "Continue SSH setup with existing key" || exit 1;
     fi
 
-    # generate_new_ssh_keypair "$ALGORITHM" "$KEY_FILE" "$KEY_COMMENT"
-    echo
-
     cat "$KEY_FILE.pub"
-    echo
 
     confirm_yes "Add to SSH config" \
         && SSH_HOST=$(ask_for_value "Enter SSH HOST" "$HOST") \
         && SSH_USER=$(ask_for_value "Enter SSH USER" "$DEFAULT_SSH_USER") \
         && add_to_ssh_config "$SSH_HOST" "$SSH_USER" "$KEY_FILE"
-    echo
 
     confirm_yes "Copy public key to clipboard" && pbcopy < "$KEY_FILE.pub"
-    echo
 
     confirm_yes "Test SSH connection to HOST (uses any of your existing SSH config!)" \
         && SSH_HOST=$(ask_for_value "Enter SSH HOST" "${SSH_HOST:-HOST}") \

@@ -6,8 +6,8 @@
 
 REMOTE_BASE_URL="${1:-https://github.com/gtmn/dotfiles/raw/main/scripts}"
 DOTFILES_REMOTE_REPO_URL="git@github.com:gtmn/dotfiles"
-DOTFILES_DIR="$HOME/.dotfiles"
-TMP_DIR="$HOME/.tmp_dotfiles"
+TMP_DIR="$HOME/.bootstrap_tmp"
+DOTFILES_DIR="$HOME/Developer/dotfiles"
 BOOTSTRAP_SCRIPT_FILES=('ask.sh' 'confirm.sh' 'ssh_key_helper.sh')
 
 # ====================================================================================================
@@ -83,7 +83,7 @@ confirm "Added SSH key to your account?"
 # ====================================================================================================
 
 if [[ ! -f $DOTFILES_DIR ]]; then
-    echo "Did not find dotfiles directory"
+    echo "Did not find dotfiles directory..."
 
     confirm "Clone dotfiles directory to $DOTFILES_DIR directory?" &&
         mkdir -p "$DOTFILES_DIR" &&
@@ -110,4 +110,21 @@ fi
 if [[ -d "$TMP_DIR" ]]; then
     confirm "Remove temporary script files downloaded for bootstrapping?" &&
         rm -rf "$TMP_DIR"
+fi
+
+
+# ====================================================================================================
+# Install Homebrew
+# ====================================================================================================
+
+if ! command -v brew &> /dev/null; then
+    confirm "Install Homebrew?" &&
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # echo "eval \"$(/opt/homebrew/bin/brew shellenv)\"" >> /Users/"$(whoami)"/.zprofile
+else
+    echo "Homebrew is already installed..."
+    confirm "Update & upgrade Homebrew now?" &&
+        brew update &&
+        brew upgrade
 fi
