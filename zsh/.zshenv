@@ -1,1 +1,1 @@
-ZDOTDIR=~/.dotfiles/.config/zsh/.zshrc
+ZDOTDIR=~/.config/zsh
